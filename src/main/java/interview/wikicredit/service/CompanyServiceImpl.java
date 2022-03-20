@@ -7,7 +7,6 @@ import interview.wikicredit.dto.CompanyResponse;
 import interview.wikicredit.entity.Company;
 import interview.wikicredit.mapper.CompanyMapper;
 import interview.wikicredit.repository.CompanyRepository;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,13 +27,11 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     public CompanyResponse getCompany(int id) {
-        Optional<Company> company = repository.findById(id);
-        if (company.isPresent()) {
-            return mapper.toResponse(company.get());
-        } else {
-            throw new ApplicationException(
-              ErrorCode.ENTITY_NOT_FOUND,
-              "Company not found with id: " + id);
-        }
+        Company company = repository.findById(id)
+          .orElseThrow(() -> new ApplicationException(
+            ErrorCode.ENTITY_NOT_FOUND,
+            "Company not found with id: " + id)
+          );
+        return mapper.toResponse(company);
     }
 }

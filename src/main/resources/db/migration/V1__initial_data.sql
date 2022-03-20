@@ -24,7 +24,7 @@ INSERT INTO WIKICREDIT.COMPANY (NAME) VALUES ('VEF');
 create table wikicredit.wikipedia_data
 (
     id int auto_increment primary key,
-    company_id int,
+    company_id int unique,
     page_id int,
     summary text,
     created_at timestamp,

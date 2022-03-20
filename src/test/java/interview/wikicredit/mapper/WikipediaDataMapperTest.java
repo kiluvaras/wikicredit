@@ -46,7 +46,7 @@ class WikipediaDataMapperTest {
     @Test
     void toEntity_validInputs_mapsAllFields() {
         WikipediaSummaryRequestResponse response = new WikipediaSummaryRequestResponse();
-        response.setPageid(PAGE_ID);
+        response.setPageId(PAGE_ID);
         response.setExtract(SUMMARY);
 
         WikipediaData result = mapper.toEntity(response);

@@ -3,6 +3,7 @@ package interview.wikicredit.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -79,13 +80,9 @@ class WikipediaDataServiceImplTest {
 
     @Test
     void fetchWikipediaData_wikipediaDataAlreadyExists_updatesAndReturnsNewWikipediaData() {
-        CompanyResponse company = new CompanyResponse();
-        company.setId(COMPANY_ID);
-        company.setName(COMPANY_NAME);
+        CompanyResponse company = getMockCompanyResponse();
         when(companyService.getCompany(COMPANY_ID)).thenReturn(company);
-        WikipediaSummaryRequestResponse requestResponse = new WikipediaSummaryRequestResponse();
-        requestResponse.setExtract(SUMMARY);
-        requestResponse.setPageid(PAGE_ID);
+        WikipediaSummaryRequestResponse requestResponse =  getMockWikipediaSummaryRequestResponse();
         when(requestService.getCompanySummary(COMPANY_NAME)).thenReturn(requestResponse);
         WikipediaData oldEntity = WikipediaData.builder()
           .summary(OLD_SUMMARY)
@@ -109,13 +106,9 @@ class WikipediaDataServiceImplTest {
 
     @Test
     void fetchWikipediaData_wikipediaDataDoesNotYetExist_createsAndReturnsNewWikipediaData() {
-        CompanyResponse company = new CompanyResponse();
-        company.setId(COMPANY_ID);
-        company.setName(COMPANY_NAME);
+        CompanyResponse company = getMockCompanyResponse();
         when(companyService.getCompany(COMPANY_ID)).thenReturn(company);
-        WikipediaSummaryRequestResponse requestResponse = new WikipediaSummaryRequestResponse();
-        requestResponse.setExtract(SUMMARY);
-        requestResponse.setPageid(PAGE_ID);
+        WikipediaSummaryRequestResponse requestResponse = getMockWikipediaSummaryRequestResponse();
         when(requestService.getCompanySummary(COMPANY_NAME)).thenReturn(requestResponse);
         WikipediaData newEntity = WikipediaData.builder()
           .summary(SUMMARY)
@@ -131,5 +124,61 @@ class WikipediaDataServiceImplTest {
           .extracting("summary", "pageId")
           .contains(SUMMARY, PAGE_ID);
         verify(repository).save(any(WikipediaData.class));
+    }
+
+    @Test
+    void fetchWikipediaData_wikiRequestResponseIsNull_throwsException() {
+        CompanyResponse company = getMockCompanyResponse();
+        when(companyService.getCompany(COMPANY_ID)).thenReturn(company);
+        when(requestService.getCompanySummary(COMPANY_NAME)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.fetchWikipediaData(COMPANY_ID))
+          .isExactlyInstanceOf(ApplicationException.class)
+            .hasMessage("Wikipedia summary response missing");
+        verify(repository, never()).save(any(WikipediaData.class));
+    }
+
+    @Test
+    void fetchWikipediaData_wikiRequestResponseExtractIsNull_throwsException() {
+        CompanyResponse company = getMockCompanyResponse();
+        when(companyService.getCompany(COMPANY_ID)).thenReturn(company);
+        WikipediaSummaryRequestResponse response = new WikipediaSummaryRequestResponse();
+        response.setExtract(null);
+        response.setPageId(PAGE_ID);
+        when(requestService.getCompanySummary(COMPANY_NAME)).thenReturn(response);
+
+        assertThatThrownBy(() -> service.fetchWikipediaData(COMPANY_ID))
+          .isExactlyInstanceOf(ApplicationException.class)
+          .hasMessage("Wikipedia summary response missing extract field");
+        verify(repository, never()).save(any(WikipediaData.class));
+    }
+
+    @Test
+    void fetchWikipediaData_wikiRequestResponsePageIdIsNull_throwsException() {
+        CompanyResponse company = getMockCompanyResponse();
+        when(companyService.getCompany(COMPANY_ID)).thenReturn(company);
+        WikipediaSummaryRequestResponse response = new WikipediaSummaryRequestResponse();
+        response.setExtract(SUMMARY);
+        response.setPageId(null);
+        when(requestService.getCompanySummary(COMPANY_NAME)).thenReturn(response);
+
+        assertThatThrownBy(() -> service.fetchWikipediaData(COMPANY_ID))
+          .isExactlyInstanceOf(ApplicationException.class)
+          .hasMessage("Wikipedia summary response missing pageId field");
+        verify(repository, never()).save(any(WikipediaData.class));
+    }
+
+    private CompanyResponse getMockCompanyResponse() {
+        CompanyResponse company = new CompanyResponse();
+        company.setId(COMPANY_ID);
+        company.setName(COMPANY_NAME);
+        return company;
+    }
+
+    private WikipediaSummaryRequestResponse getMockWikipediaSummaryRequestResponse() {
+        WikipediaSummaryRequestResponse response = new WikipediaSummaryRequestResponse();
+        response.setExtract(SUMMARY);
+        response.setPageId(PAGE_ID);
+        return response;
     }
 }

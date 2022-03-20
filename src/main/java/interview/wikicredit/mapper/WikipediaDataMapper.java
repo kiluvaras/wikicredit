@@ -13,6 +13,5 @@ public interface WikipediaDataMapper {
     WikipediaDataResponse toResponse(WikipediaData model);
 
     @Mapping(source = "extract", target = "summary")
-    @Mapping(source = "pageid", target = "pageId")
     WikipediaData toEntity(WikipediaSummaryRequestResponse dto);
 }

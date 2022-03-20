@@ -48,10 +48,11 @@ public class WikipediaDataServiceImpl implements WikipediaDataService {
 
         try {
             WikipediaSummaryRequestResponse response = requestService.getCompanySummary(company.getName());
+            validateResponse(response);
             if (wikipediaDataOptional.isPresent()) {
                 wikipediaData = wikipediaDataOptional.get();
                 wikipediaData.setSummary(response.getExtract());
-                wikipediaData.setPageId(response.getPageid());
+                wikipediaData.setPageId(response.getPageId());
             } else {
                 wikipediaData = mapper.toEntity(response);
             }
@@ -70,5 +71,26 @@ public class WikipediaDataServiceImpl implements WikipediaDataService {
 
     private Optional<WikipediaData> findWikipediaData(int companyId) {
         return repository.findByCompanyId(companyId);
+    }
+
+    private void validateResponse(WikipediaSummaryRequestResponse response) {
+        if (response == null) {
+            throw new ApplicationException(
+              ErrorCode.VALIDATION_ERROR,
+              "Wikipedia summary response missing"
+            );
+        }
+        if (response.getExtract() == null) {
+            throw new ApplicationException(
+              ErrorCode.VALIDATION_ERROR,
+              "Wikipedia summary response missing extract field"
+            );
+        }
+        if (response.getPageId() == null) {
+            throw new ApplicationException(
+              ErrorCode.VALIDATION_ERROR,
+              "Wikipedia summary response missing pageId field"
+            );
+        }
     }
 }
